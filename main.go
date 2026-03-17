@@ -126,6 +126,13 @@ func main() {
 // URI 빌드
 // ---------------------------------------------------------------------------
 
+// safeEscape: URI 쿼리 파라미터 인코딩. url.QueryEscape의 공백→"+" 변환을
+// "%20"으로 대체한다. obsidian:// URI는 decodeURIComponent로 디코딩되므로
+// "+"를 공백으로 처리하지 않아 파일 못 찾는 버그가 발생했음.
+func safeEscape(s string) string {
+	return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
+}
+
 func buildURI(filePath, vaultPath string) string {
 	rel, err := filepath.Rel(vaultPath, filePath)
 	if err != nil {
@@ -134,9 +141,9 @@ func buildURI(filePath, vaultPath string) string {
 	rel = filepath.ToSlash(rel)
 	vaultName := filepath.Base(vaultPath)
 	return "obsidian://advanced-uri?vault=" +
-		url.QueryEscape(vaultName) +
+		safeEscape(vaultName) +
 		"&filepath=" +
-		url.QueryEscape(rel) +
+		safeEscape(rel) +
 		"&openmode=true"
 }
 
