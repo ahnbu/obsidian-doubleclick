@@ -139,8 +139,11 @@ func buildURI(filePath, vaultPath string) string {
 		rel = filePath
 	}
 	rel = filepath.ToSlash(rel)
+
+	// adv-uri 프로토콜: Advanced URI v1.44.0+ 이중 디코딩 버그 수정판
+	// % 포함 파일명도 단일 인코딩으로 정상 동작
 	vaultName := filepath.Base(vaultPath)
-	return "obsidian://advanced-uri?vault=" +
+	return "obsidian://adv-uri?vault=" +
 		safeEscape(vaultName) +
 		"&filepath=" +
 		safeEscape(rel) +
