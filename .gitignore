@@ -1,6 +1,7 @@
 # 빌드 결과물
 *.exe
 *.blob
+*.syso
 
 # 설정 (개인 설정은 버전 관리 제외)
 obsidian-handler.config.json
