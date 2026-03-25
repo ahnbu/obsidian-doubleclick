@@ -4,6 +4,7 @@
 
 | 일시 | 유형 | 범위 | 변경내용 (목적 포함) |
 |---|---|---|---|
+| 2026-03-25 | chore | .gitignore | _handoff/ 항목 제거 — handoff git 추적 복원 |
 | 2026-03-20 | feat | icon | Obsidian 아이콘 EXE 임베딩 — 연결 프로그램 메뉴에서 Go 기본 아이콘 대신 Obsidian 로고 표시 |
 | 2026-03-19 | chore | gitignore | .backup/ 디렉토리 gitignore 추가 — 백업 파일 추적 방지 |
 | 2026-03-18 | fix | handler | advanced-uri → adv-uri 프로토콜 전환 — 이중 디코딩 버그 수정판 사용, % 포함 파일명 분기 로직 제거, 모든 파일 단일 경로로 통합 |

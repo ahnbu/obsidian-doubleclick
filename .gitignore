@@ -6,3 +6,14 @@
 # 설정 (개인 설정은 버전 관리 제외)
 obsidian-handler.config.json
 .backup/
+.playwright-cli/
+.bkit/
+.pdca-status
+.pdca-status.json
+.bkit-memory
+.bkit-memory.json
+.pdca-snapshots
+.current-session-id
+.env
+temp/
+.temp/
