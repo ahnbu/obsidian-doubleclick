@@ -4,6 +4,7 @@
 
 | 일시 | 유형 | 범위 | 변경내용 (목적 포함) |
 |---|---|---|---|
+| 2026-03-29 | fix | handler | Typora fallback 공백 파일명 인자 quoting 수정 — syscall.EscapeArg 적용 및 회귀 테스트 추가 |
 | 2026-03-25 | chore | .gitignore | _handoff/ 항목 제거 — handoff git 추적 복원 |
 | 2026-03-20 | feat | icon | Obsidian 아이콘 EXE 임베딩 — 연결 프로그램 메뉴에서 Go 기본 아이콘 대신 Obsidian 로고 표시 |
 | 2026-03-19 | chore | gitignore | .backup/ 디렉토리 gitignore 추가 — 백업 파일 추적 방지 |

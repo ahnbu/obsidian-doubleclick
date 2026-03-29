@@ -239,7 +239,10 @@ func shellOpen(uri string) {
 func shellOpenWith(app, filePath string) {
 	verbPtr, _ := syscall.UTF16PtrFromString("open")
 	appPtr, _ := syscall.UTF16PtrFromString(app)
-	filePtr, _ := syscall.UTF16PtrFromString(filePath)
+	escapedPath := escapeShellArgument(filePath)
+	filePtr, _ := syscall.UTF16PtrFromString(escapedPath)
+
+	writeLog(fmt.Sprintf("LAUNCH fallback-args app=%s args=%s", app, escapedPath))
 
 	procShellExecuteW.Call(
 		0,
@@ -249,6 +252,10 @@ func shellOpenWith(app, filePath string) {
 		0,
 		1,
 	)
+}
+
+func escapeShellArgument(arg string) string {
+	return syscall.EscapeArg(arg)
 }
 
 // ---------------------------------------------------------------------------
