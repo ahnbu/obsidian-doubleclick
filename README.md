@@ -28,6 +28,7 @@ Node.js 불필요 · exe 3.3MB · 설치 스크립트 한 번 실행으로 완�
 ```
 
 - vault 목록을 `%APPDATA%\Obsidian\obsidian.json`에서 자동 읽음 (하드코딩 불필요)
+- Obsidian 업데이트 후 `.md` 연결 command, 아이콘, 앱 이름이 틀어지면 더블클릭 시 안전 항목만 자동 복구
 - 콘솔 창 깜빡임 없음 (`-H=windowsgui` 빌드)
 - 실행 로그: `%TEMP%\obsidian-md-handler.log`
 
@@ -96,9 +97,18 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 
 **"advanced-uri" 오류가 떠요** → 옵시디언 설정 → 커뮤니티 플러그인 → Advanced URI 설치·활성화 확인
 
-**파일 아이콘이 이상해졌어요** → `install.ps1` 다시 실행하면 Obsidian 아이콘으로 복원됨
+**파일 아이콘이 이상해졌어요** → vault 안의 `.md`를 한 번 더블클릭하거나 `.\obsidian-handler.exe --repair` 실행. 그래도 안 되면 `install.ps1` 재실행
 
 **vault 외부 파일이 안 열려요** → `obsidian-handler.config.json`에 `fallbackCommand` 직접 지정
+
+**연결 상태를 직접 점검하고 싶어요**:
+
+```powershell
+.\obsidian-handler.exe --doctor
+.\obsidian-handler.exe --repair
+```
+
+`--repair`는 `.md` 기본 앱 자체를 강제로 바꾸지 않고, handler command, Obsidian 아이콘, 앱 이름만 복구함.
 
 ---
 
@@ -120,6 +130,9 @@ Go 1.20+ 필요. 외부 의존성 없음.
 ```bash
 # 볼트 감지 확인
 obsidian-handler-debug.exe --debug "C:\path\to\file.md"
+
+# 연결 상태 확인
+obsidian-handler-debug.exe --doctor
 ```
 
 ---
