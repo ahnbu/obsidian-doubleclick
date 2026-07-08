@@ -17,3 +17,4 @@ obsidian-handler.config.json
 .env
 temp/
 .temp/
+.codegraph/
