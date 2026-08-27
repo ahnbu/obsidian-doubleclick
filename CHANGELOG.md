@@ -4,6 +4,7 @@
 
 | 일시 | 유형 | 범위 | 변경내용 (목적 포함) |
 |---|---|---|---|
+| 2026-08-27 15:03 | docs | verify | 릴리스 직전 추가 검증 2건 기록 — 탐색기 연결 경로(ShellExecute) 실행 확인, 플러그인 없는 실제 볼트에서 공식 URI 자동 전환 E2E 통과. .agents 볼트의 community-plugins.json만 임시 이동하는 격리 방식으로 글로벌 obsidian.json 미접촉, 해시 대조로 원복 확인. 계획서의 8번 생략 기록을 실행 완료로 갱신 |
 | 2026-08-27 14:55 | docs | readme | 공개 배포 준비 — 영어 README를 정본으로 신설(한국어는 README.ko.md로 분리), MIT LICENSE 파일 추가, your-username 플레이스홀더를 ahnbu로 수정, uriMode 설정과 다중 vault 창 선택 동작 문서화, 미서명 exe 안내 추가 |
 | 2026-08-27 13:57 | fix | handler | 다중 vault 포커스 버그 수정 + Advanced URI 플러그인 의존 제거 — 창 제목의 vault명으로 대상 창을 특정(2단계 폴백), community-plugins.json 감지로 플러그인 없으면 공식 URI(paneType=tab) 자동 전환, uriMode config 옵션 추가, 판정용 로깅 강화. 공개 배포 선행 조건 |
 | 2026-07-08 11:27 | chore | gitignore | gitignore에 .codegraph/를 추가해 CodeGraph 로컬 캐시가 작업트리에 노출되지 않도록 보완 |
