@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // --- R2: URI 모드 판정 & URI 생성 -------------------------------------------
@@ -214,6 +215,23 @@ func TestMatchesVaultTitleRejectsNoteTitledLikeVault(t *testing.T) {
 func TestMatchesVaultTitleEmptyVaultName(t *testing.T) {
 	if matchesVaultTitle("새 탭 - cowork - Obsidian 1.13.7", "") {
 		t.Fatal("empty vault name must not match anything")
+	}
+}
+
+// 콜드 스타트에서는 대기 예산이 눈에 띄게 길어야 한다.
+// 고정 예산(약 2.5초)이 만료돼 창이 뜨기 전에 포기하던 것이 원래 증상이다.
+func TestActivateBudgetIsLongerOnColdStart(t *testing.T) {
+	warm := activateBudget(false)
+	cold := activateBudget(true)
+
+	if cold <= warm {
+		t.Fatalf("cold budget (%v) must exceed warm budget (%v)", cold, warm)
+	}
+	if cold < 20*time.Second {
+		t.Fatalf("cold budget %v is too short for an Electron cold start + vault indexing", cold)
+	}
+	if warm > 5*time.Second {
+		t.Fatalf("warm budget %v is too long — Obsidian is already running", warm)
 	}
 }
 

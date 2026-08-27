@@ -152,11 +152,14 @@ func main() {
 
 	switch {
 	case vault != nil:
+		// URI를 보내기 전에 판정해야 한다. URI 자체가 옵시디언을 띄우므로
+		// 보낸 뒤에 세면 콜드 스타트를 웜으로 오판한다.
+		coldStart := len(enumObsidianWindows()) == 0
 		mode := resolveURIMode(cfg, vault.Path)
 		uri := buildURI(filePath, vault.Path, mode)
-		writeLog("LAUNCH obsidian-uri uri_mode=" + mode + " " + uri)
+		writeLog(fmt.Sprintf("LAUNCH obsidian-uri uri_mode=%s cold_start=%t %s", mode, coldStart, uri))
 		shellOpen(uri)
-		activateObsidian(filepath.Base(vault.Path))
+		activateObsidian(filepath.Base(vault.Path), coldStart)
 
 	case cfg.FallbackCommand != "":
 		writeLog("LAUNCH fallback-config " + cfg.FallbackCommand)
@@ -742,32 +745,85 @@ func pickObsidianWindow(windows []windowInfo, vaultName string) (windowInfo, str
 	return windowInfo{}, "none"
 }
 
-func activateObsidian(vaultName string) {
+// 창 활성화 대기 예산.
+//
+// 옵시디언이 이미 떠 있으면 창은 곧바로 잡힌다. 반면 꺼져 있었다면 Electron
+// 부팅 + 볼트 인덱싱 + 플러그인 로딩이 끝나야 창이 나타나므로 훨씬 오래 걸린다.
+// 기존 고정 예산(약 2.5초)은 후자에서 창이 뜨기도 전에 만료돼, 파일은 열렸는데
+// 창이 뒤에 남는 "반응 없음" 증상을 만들었다.
+// 실측: 실행 2,350건 중 23건(1.0%) 실패, 그 실패의 65%가 직전 실행으로부터
+// 1시간 넘게 지난 뒤였다(중앙값 357분) — 즉 대부분 콜드 스타트다.
+const (
+	warmActivateBudget   = 3 * time.Second
+	coldActivateBudget   = 30 * time.Second
+	activatePollInterval = 500 * time.Millisecond
+)
+
+func activateBudget(coldStart bool) time.Duration {
+	if coldStart {
+		return coldActivateBudget
+	}
+	return warmActivateBudget
+}
+
+// focusWindow: 최소화돼 있으면 복원한 뒤 전면으로 올리고 결과를 로그에 남긴다.
+func focusWindow(win windowInfo, match, mode string, elapsed time.Duration, attempts int) {
+	iconic, _, _ := procIsIconic.Call(win.hwnd)
+	restored := false
+	if iconic != 0 {
+		procShowWindow.Call(win.hwnd, swRestore)
+		restored = true
+	}
+	ret, _, _ := procSetForeground.Call(win.hwnd)
+	foreground := "fail"
+	if ret != 0 {
+		foreground = "ok"
+	}
+	writeLog(fmt.Sprintf(
+		"activate-window match=%s mode=%s title=%q hwnd=0x%X iconic=%t restored=%t foreground=%s elapsed=%.1fs attempts=%d",
+		match, mode, win.title, win.hwnd, iconic != 0, restored, foreground, elapsed.Seconds(), attempts,
+	))
+}
+
+// activateObsidian: 대상 볼트의 창을 전면으로 올린다.
+//
+// 예산이 소진될 때까지는 exact 매칭만 받아들인다. 콜드 스타트에서는 다른 볼트의
+// 창이 먼저 뜨는 경우가 있는데, 그때 곧바로 fallback으로 그 창을 잡아버리면
+// 정작 대상 볼트 창이 뜨기 전에 끝나버리기 때문이다. fallback은 예산이 끝난 뒤
+// 마지막 수단으로만 쓴다.
+func activateObsidian(vaultName string, coldStart bool) {
+	budget := activateBudget(coldStart)
+	mode := "warm"
+	if coldStart {
+		mode = "cold"
+	}
+
+	start := time.Now()
 	time.Sleep(1 * time.Second)
 
-	for i := 0; i < 3; i++ {
-		win, match := pickObsidianWindow(enumObsidianWindows(), vaultName)
-		if win.hwnd != 0 {
-			iconic, _, _ := procIsIconic.Call(win.hwnd)
-			restored := false
-			if iconic != 0 {
-				procShowWindow.Call(win.hwnd, swRestore)
-				restored = true
-			}
-			ret, _, _ := procSetForeground.Call(win.hwnd)
-			foreground := "fail"
-			if ret != 0 {
-				foreground = "ok"
-			}
-			writeLog(fmt.Sprintf(
-				"activate-window match=%s title=%q hwnd=0x%X iconic=%t restored=%t foreground=%s attempt=%d",
-				match, win.title, win.hwnd, iconic != 0, restored, foreground, i+1,
-			))
+	attempts := 0
+	for {
+		attempts++
+		if win, match := pickObsidianWindow(enumObsidianWindows(), vaultName); match == "exact" {
+			focusWindow(win, match, mode, time.Since(start), attempts)
 			return
 		}
-		time.Sleep(500 * time.Millisecond)
+		if time.Since(start) >= budget {
+			break
+		}
+		time.Sleep(activatePollInterval)
 	}
-	writeLog(fmt.Sprintf("activate-window match=none vault=%q — Obsidian 창을 찾지 못함 (3회 시도)", vaultName))
+
+	// 예산 소진 — 볼트를 특정하지 못했으니 아무 옵시디언 창이라도 올린다.
+	attempts++
+	if win, match := pickObsidianWindow(enumObsidianWindows(), vaultName); win.hwnd != 0 {
+		focusWindow(win, match, mode, time.Since(start), attempts)
+		return
+	}
+	writeLog(fmt.Sprintf(
+		"activate-window match=none mode=%s vault=%q elapsed=%.1fs attempts=%d — Obsidian 창을 찾지 못함",
+		mode, vaultName, time.Since(start).Seconds(), attempts,
+	))
 }
 
 // ---------------------------------------------------------------------------

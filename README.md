@@ -1,10 +1,17 @@
 # obsidian-md-handler
 
-**Double-click a `.md` file in Explorer → it opens in Obsidian.** (Windows)
+### Double-clicking a `.md` file doesn't open it in Obsidian. This fixes that.
 
-A single 3.4 MiB executable. No .NET, no Node.js, and **no Obsidian plugin required**.
+**Windows only** · one 3.4 MiB exe · no .NET, no Node.js, **no Obsidian plugin required**
+
+[![Release](https://img.shields.io/github/v/release/ahnbu/obsidian-md-handler?color=7c3aed)](https://github.com/ahnbu/obsidian-md-handler/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/ahnbu/obsidian-md-handler/total?color=7c3aed)](https://github.com/ahnbu/obsidian-md-handler/releases)
+[![License](https://img.shields.io/github/license/ahnbu/obsidian-md-handler?color=7c3aed)](LICENSE)
+![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078d4)
 
 [한국어 README](README.ko.md)
+
+<!-- DEMO GIF: 여기에 `![demo](docs/demo.gif)` 한 줄. 탐색기 더블클릭 → 옵시디언 새 탭 5초 녹화. -->
 
 ---
 
@@ -55,7 +62,7 @@ double-click note.md
 - Obsidian
 - *(Optional)* [Advanced URI plugin](https://obsidian.md/plugins?id=obsidian-advanced-uri) — only needed if you want an already-open note to be focused instead of opened again
 
-> **The executable is not code-signed.** Windows SmartScreen will warn you the first time. If you would rather not trust a stranger's binary, [build it yourself](#build-from-source) — it is ~840 lines of dependency-free Go and takes one command.
+> **The executable is not code-signed.** Windows SmartScreen will warn you the first time. If you would rather not trust a stranger's binary, [build it yourself](#build-from-source) — it is ~900 lines of dependency-free Go and takes one command.
 
 ---
 
@@ -141,6 +148,10 @@ If the file cannot be read for any reason, it falls back to the official URI, wh
 ```
 
 `--repair` never changes which app owns `.md`. It only restores the handler command, the Obsidian icon, and the friendly app name.
+
+**I use Lazy Plugin Loader and Advanced URI stopped working** → [Lazy Plugin Loader](https://github.com/alangrainger/obsidian-lazy-plugins) delays plugin loading, but this handler only reads `community-plugins.json`, which says *enabled* without saying *loaded yet*. If Advanced URI hasn't finished loading when the URI arrives, the request is dropped. **Set Advanced URI to `instant` in Lazy Loader's settings** — it's the entry point for everything else, so it shouldn't be deferred. Alternatively set `"uriMode": "official"` in the config to bypass the plugin entirely.
+
+**It takes several seconds when Obsidian isn't already running** → that's Obsidian's cold start (Electron boot + vault indexing + plugin loading), not the handler. The handler waits up to 30 seconds for the window on a cold start and 3 seconds when Obsidian is already running; `elapsed=` in the log tells you which. Vault indexing usually dominates — Lazy Plugin Loader only helps with the plugin-loading part.
 
 **I want to see what URI it would build, without opening anything**
 

@@ -1,20 +1,40 @@
 # obsidian-md-handler
 
-**.md 파일 더블클릭 → 옵시디언에서 바로 열기** (Windows)
+### `.md` 더블클릭해도 옵시디언에서 그 파일이 안 열리는 문제, 이걸로 해결됨
 
-Node.js 불필요 · 플러그인 불필요 · exe 3.4MiB · 설치 스크립트 한 번 실행으로 완성
+**Windows 전용** · exe 하나 3.4MiB · .NET·Node.js·플러그인 **전부 불필요**
+
+[![Release](https://img.shields.io/github/v/release/ahnbu/obsidian-md-handler?color=7c3aed)](https://github.com/ahnbu/obsidian-md-handler/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/ahnbu/obsidian-md-handler/total?color=7c3aed)](https://github.com/ahnbu/obsidian-md-handler/releases)
+[![License](https://img.shields.io/github/license/ahnbu/obsidian-md-handler?color=7c3aed)](LICENSE)
+![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078d4)
 
 [English README](README.md)
 
+<!-- DEMO GIF: 여기에 `![demo](docs/demo.gif)` 한 줄. 영어판과 같은 파일을 쓴다. -->
+
 ---
 
-## 이런 문제 없었어?
+## 이 문제 겪어봤다면
 
-탐색기에서 `.md` 파일 더블클릭 → 옵시디언이 열리긴 하는데 **클릭한 파일은 안 열리고 마지막 워크스페이스만 나옴.**
+`.md` 기본 앱을 옵시디언으로 잡아두고 노트를 더블클릭했는데, **클릭한 파일은 안 열리고 마지막 워크스페이스만 뜬 적** 있을 거다.
 
-옵시디언은 Electron 앱이라 `Obsidian.exe 파일경로` 방식으로는 특정 파일을 열 수 없어. 이걸 해결하려면 `obsidian://` URI 프로토콜을 경유하는 래퍼가 필요한데, 기존 방법들은 Node.js 설치 + VBS 파일 여러 개 + 스크립트 구성이 복잡했음.
+설정이 잘못된 게 아니다. 옵시디언은 Electron 앱이라 윈도우가 넘겨주는 파일 경로(`Obsidian.exe "%1"`)를 무시한다.
 
-이 도구는 **Go로 만든 단일 exe 하나**로 이 모든 걸 대체함.
+이건 [2020년 5월부터 열려 있는 최다 요청 이슈](https://forum.obsidian.md/t/have-obsidian-be-the-handler-of-md-files-add-ability-to-use-obsidian-as-a-markdown-editor-on-files-outside-vault-file-association/314)다 — 좋아요 100개 이상, 댓글 170개 이상, 지금도 미해결.
+
+그래서 해결은 옵시디언 바깥에 있어야 한다. 탐색기와 옵시디언 사이에 끼어서 파일 경로를 `obsidian://` URI로 번역해주는 작은 프로그램 — 이게 그거다.
+
+## 기존 우회안과 뭐가 다른가
+
+| | 이 도구 | [ObsidianShell](https://github.com/Chaoses-Ib/ObsidianShell) | BAT / AHK 스크립트 |
+|---|---|---|---|
+| 의존성 | 없음 (exe 1개) | .NET 런타임 | 제각각 |
+| 옵시디언 플러그인 필요 | 불필요 (선택) | 불필요 | 대개 필요 |
+| 이미 열린 탭 포커스 (중복 방지) | ✅ (플러그인 있을 때) | ❌ | ❌ |
+| 볼트 여러 개일 때 올바른 창 선택 | ✅ | ❌ | ❌ |
+| 볼트 외부 파일 | 다른 에디터로 폴백 | 설정 가능 | 대개 미처리 |
+| 유지보수 | 진행 중 | 2023년 이후 없음 | — |
 
 ---
 
@@ -46,7 +66,7 @@ Node.js 불필요 · 플러그인 불필요 · exe 3.4MiB · 설치 스크립트
 - 옵시디언
 - *(선택)* [Advanced URI 플러그인](https://obsidian.md/plugins?id=obsidian-advanced-uri) — **없어도 동작함.** 이미 열려 있는 노트를 새로 여는 대신 그 탭으로 포커스하고 싶을 때만 필요
 
-> **exe에 코드 서명이 없음.** 처음 실행하면 Windows SmartScreen 경고가 뜬다. 남의 바이너리를 그냥 받기 꺼려지면 [직접 빌드](#직접-빌드)하면 된다 — 외부 의존성 없는 Go 840줄이고 명령 한 줄이면 끝난다.
+> **exe에 코드 서명이 없음.** 처음 실행하면 Windows SmartScreen 경고가 뜬다. 남의 바이너리를 그냥 받기 꺼려지면 [직접 빌드](#직접-빌드)하면 된다 — 외부 의존성 없는 Go 900줄이고 명령 한 줄이면 끝난다.
 
 ### 설치 순서
 
@@ -122,6 +142,10 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 **파일 아이콘이 이상해졌어요** → vault 안의 `.md`를 한 번 더블클릭하거나 `.\obsidian-handler.exe --repair` 실행. 그래도 안 되면 `install.ps1` 재실행
 
 **vault 외부 파일이 안 열려요** → `obsidian-handler.config.json`에 `fallbackCommand` 직접 지정
+
+**Lazy Plugin Loader 쓰는데 Advanced URI가 안 먹어요** → [Lazy Plugin Loader](https://github.com/alangrainger/obsidian-lazy-plugins)는 플러그인 로딩을 지연시키는데, 이 핸들러는 `community-plugins.json`만 읽는다. 그 파일은 **"켜져 있음"은 알려주지만 "이미 로딩됐음"은 알려주지 않는다.** URI가 도착한 시점에 Advanced URI가 아직 안 떴으면 요청이 그냥 씹힌다. **Lazy Loader 설정에서 Advanced URI를 `instant`로 두면 된다** — 나머지 전부의 입구라서 지연 대상이 아니다. 아니면 config에 `"uriMode": "official"`을 넣어 플러그인을 우회해도 된다.
+
+**옵시디언이 꺼져 있을 때 몇 초씩 걸려요** → 핸들러가 아니라 옵시디언 콜드 스타트(Electron 부팅 + 볼트 인덱싱 + 플러그인 로딩)다. 핸들러는 콜드 스타트면 창을 최대 30초, 이미 떠 있으면 3초까지 기다린다. 로그의 `elapsed=`로 어느 쪽인지 확인할 수 있다. **대개 볼트 인덱싱이 지배적**이라 Lazy Plugin Loader로는 한계가 있다 — 그건 플러그인 로딩만 건드린다
 
 **연결 상태를 직접 점검하고 싶어요**:
 
