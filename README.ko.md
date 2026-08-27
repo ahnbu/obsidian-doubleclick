@@ -145,7 +145,9 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 
 **Lazy Plugin Loader 쓰는데 Advanced URI가 안 먹어요** → [Lazy Plugin Loader](https://github.com/alangrainger/obsidian-lazy-plugins)는 플러그인 로딩을 지연시키는데, 이 핸들러는 `community-plugins.json`만 읽는다. 그 파일은 **"켜져 있음"은 알려주지만 "이미 로딩됐음"은 알려주지 않는다.** URI가 도착한 시점에 Advanced URI가 아직 안 떴으면 요청이 그냥 씹힌다. **Lazy Loader 설정에서 Advanced URI를 `instant`로 두면 된다** — 나머지 전부의 입구라서 지연 대상이 아니다. 아니면 config에 `"uriMode": "official"`을 넣어 플러그인을 우회해도 된다.
 
-**옵시디언이 꺼져 있을 때 몇 초씩 걸려요** → 핸들러가 아니라 옵시디언 콜드 스타트(Electron 부팅 + 볼트 인덱싱 + 플러그인 로딩)다. 핸들러는 콜드 스타트면 창을 최대 30초, 이미 떠 있으면 3초까지 기다린다. 로그의 `elapsed=`로 어느 쪽인지 확인할 수 있다. **대개 볼트 인덱싱이 지배적**이라 Lazy Plugin Loader로는 한계가 있다 — 그건 플러그인 로딩만 건드린다
+**옵시디언이 꺼져 있을 때 몇 초씩 걸려요** → 핸들러가 아니라 옵시디언 콜드 스타트다. 실측해보면 **창 자체는 약 1초 만에 뜬다.** 다만 빈 창으로 떠서 내용이 채워지는 데 한참 걸린다 — 볼트 인덱싱 + 플러그인 로딩. 즉 체감하는 대기는 창이 만들어지는 시간이 아니라 **채워지는 시간**이다.
+
+이건 이 핸들러가 어떻게 해도 못 줄인다. [Lazy Plugin Loader](https://github.com/alangrainger/obsidian-lazy-plugins)는 그중 플러그인 로딩 쪽만 도와주고, 볼트가 크면 인덱싱이 지배적이다. 핸들러는 콜드 스타트일 때 창을 더 오래(30초, 이미 떠 있으면 3초) 기다려 먼저 포기하지 않도록만 한다. 로그의 `mode=`·`elapsed=`로 어느 경로였는지 확인할 수 있다
 
 **연결 상태를 직접 점검하고 싶어요**:
 

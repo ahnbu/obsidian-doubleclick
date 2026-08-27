@@ -151,7 +151,9 @@ If the file cannot be read for any reason, it falls back to the official URI, wh
 
 **I use Lazy Plugin Loader and Advanced URI stopped working** → [Lazy Plugin Loader](https://github.com/alangrainger/obsidian-lazy-plugins) delays plugin loading, but this handler only reads `community-plugins.json`, which says *enabled* without saying *loaded yet*. If Advanced URI hasn't finished loading when the URI arrives, the request is dropped. **Set Advanced URI to `instant` in Lazy Loader's settings** — it's the entry point for everything else, so it shouldn't be deferred. Alternatively set `"uriMode": "official"` in the config to bypass the plugin entirely.
 
-**It takes several seconds when Obsidian isn't already running** → that's Obsidian's cold start (Electron boot + vault indexing + plugin loading), not the handler. The handler waits up to 30 seconds for the window on a cold start and 3 seconds when Obsidian is already running; `elapsed=` in the log tells you which. Vault indexing usually dominates — Lazy Plugin Loader only helps with the plugin-loading part.
+**It takes several seconds when Obsidian isn't already running** → that's Obsidian's cold start, not the handler. Measured on a cold launch: the window appears in about **1 second**, but it comes up empty and takes considerably longer to fill in — vault indexing plus plugin loading. So the wait you feel is the window being populated, not the window being created.
+
+Nothing this handler does can speed that up. [Lazy Plugin Loader](https://github.com/alangrainger/obsidian-lazy-plugins) helps only with the plugin-loading half; on a large vault, indexing dominates. The handler does wait longer for the window on a cold start (30 s, versus 3 s when Obsidian is already running) so it never gives up early — `mode=` and `elapsed=` in the log tell you which path a run took.
 
 **I want to see what URI it would build, without opening anything**
 
