@@ -4,6 +4,7 @@
 
 | 일시 | 유형 | 범위 | 변경내용 (목적 포함) |
 |---|---|---|---|
+| 2026-08-27 13:57 | fix | handler | 다중 vault 포커스 버그 수정 + Advanced URI 플러그인 의존 제거 — 창 제목의 vault명으로 대상 창을 특정(2단계 폴백), community-plugins.json 감지로 플러그인 없으면 공식 URI(paneType=tab) 자동 전환, uriMode config 옵션 추가, 판정용 로깅 강화. 공개 배포 선행 조건 |
 | 2026-07-08 11:27 | chore | gitignore | gitignore에 .codegraph/를 추가해 CodeGraph 로컬 캐시가 작업트리에 노출되지 않도록 보완 |
 | 2026-05-09 | feat | self-heal | 더블클릭 실행 시 handler command, DefaultIcon, FriendlyAppName drift를 안전하게 자동 복구하고 `--doctor`/`--repair` 진단 명령 추가 |
 | 2026-03-29 | fix | handler | Typora fallback 공백 파일명 인자 quoting 수정 — syscall.EscapeArg 적용 및 회귀 테스트 추가 |

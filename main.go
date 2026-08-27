@@ -83,7 +83,16 @@ type vaultEntry struct {
 type handlerConfig struct {
 	FallbackCommand string `json:"fallbackCommand,omitempty"`
 	ObsidianExePath string `json:"obsidianExePath,omitempty"`
+	// URIMode: "auto"(기본) | "adv-uri"(강제) | "official"(강제)
+	// auto는 볼트의 community-plugins.json으로 Advanced URI 활성 여부를 판정한다.
+	URIMode string `json:"uriMode,omitempty"`
 }
+
+const (
+	uriModeAdvanced = "adv-uri"
+	uriModeOfficial = "official"
+	advancedURIID   = "obsidian-advanced-uri"
+)
 
 // ---------------------------------------------------------------------------
 // main
@@ -121,12 +130,18 @@ func main() {
 			Vault    *vaultEntry   `json:"vault"`
 			Config   handlerConfig `json:"config"`
 			Vaults   []vaultEntry  `json:"allVaults"`
+			URIMode  string        `json:"uriMode,omitempty"`
+			URI      string        `json:"uri,omitempty"`
 		}
 		info := debugInfo{
 			FilePath: filePath,
 			Vault:    vault,
 			Config:   cfg,
 			Vaults:   vaults,
+		}
+		if vault != nil {
+			info.URIMode = resolveURIMode(cfg, vault.Path)
+			info.URI = buildURI(filePath, vault.Path, info.URIMode)
 		}
 		data, _ := json.MarshalIndent(info, "", "  ")
 		writeLog("DEBUG " + string(data))
@@ -137,10 +152,11 @@ func main() {
 
 	switch {
 	case vault != nil:
-		uri := buildURI(filePath, vault.Path)
-		writeLog("LAUNCH obsidian-uri " + uri)
+		mode := resolveURIMode(cfg, vault.Path)
+		uri := buildURI(filePath, vault.Path, mode)
+		writeLog("LAUNCH obsidian-uri uri_mode=" + mode + " " + uri)
 		shellOpen(uri)
-		activateObsidian()
+		activateObsidian(filepath.Base(vault.Path))
 
 	case cfg.FallbackCommand != "":
 		writeLog("LAUNCH fallback-config " + cfg.FallbackCommand)
@@ -168,16 +184,61 @@ func safeEscape(s string) string {
 	return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
 }
 
-func buildURI(filePath, vaultPath string) string {
+// detectAdvancedURI: 볼트에서 Advanced URI 플러그인이 활성화돼 있는지 판정한다.
+// community-plugins.json은 "설치된" 목록이 아니라 "활성화된" 목록이므로,
+// 설치만 하고 꺼둔 경우는 자동으로 false가 된다.
+// 파일이 없거나 파싱에 실패하면 false — 공식 URI로 폴백하는 쪽이 안전하다.
+func detectAdvancedURI(vaultPath string) bool {
+	pluginsPath := filepath.Join(vaultPath, ".obsidian", "community-plugins.json")
+	data, err := os.ReadFile(pluginsPath)
+	if err != nil {
+		return false
+	}
+	var ids []string
+	if err := json.Unmarshal(data, &ids); err != nil {
+		return false
+	}
+	for _, id := range ids {
+		if id == advancedURIID {
+			return true
+		}
+	}
+	return false
+}
+
+// resolveURIMode: config의 강제 지정이 있으면 그것을 쓰고, 없으면 자동 판정한다.
+func resolveURIMode(cfg handlerConfig, vaultPath string) string {
+	switch cfg.URIMode {
+	case uriModeAdvanced, uriModeOfficial:
+		return cfg.URIMode
+	}
+	if detectAdvancedURI(vaultPath) {
+		return uriModeAdvanced
+	}
+	return uriModeOfficial
+}
+
+func buildURI(filePath, vaultPath, mode string) string {
 	rel, err := filepath.Rel(vaultPath, filePath)
 	if err != nil {
 		rel = filePath
 	}
 	rel = filepath.ToSlash(rel)
+	vaultName := filepath.Base(vaultPath)
+
+	if mode == uriModeOfficial {
+		// 공식 URI: 플러그인 없이 동작. paneType=tab으로 새 탭에 열되
+		// 이미 열린 탭 포커스는 지원하지 않는다(탭이 하나 더 생긴다).
+		// file 파라미터는 확장자를 포함한 볼트 루트 기준 상대경로를 받는다.
+		return "obsidian://open?vault=" +
+			safeEscape(vaultName) +
+			"&file=" +
+			safeEscape(rel) +
+			"&paneType=tab"
+	}
 
 	// adv-uri 프로토콜: Advanced URI v1.44.0+ 이중 디코딩 버그 수정판
 	// % 포함 파일명도 단일 인코딩으로 정상 동작
-	vaultName := filepath.Base(vaultPath)
 	return "obsidian://adv-uri?vault=" +
 		safeEscape(vaultName) +
 		"&filepath=" +
@@ -611,20 +672,46 @@ func escapeShellArgument(arg string) string {
 // Win32: 창 활성화
 // ---------------------------------------------------------------------------
 
-func findObsidianHwnd() uintptr {
-	var found uintptr
+// vaultTitleMarker: 노트가 열린 볼트 창의 제목은
+// "<노트제목> - <볼트명> - Obsidian <버전>" 형식이다.
+// 제목 끝이 "Obsidian"이 아니라 버전 문자열이므로 접미사 매칭은 쓸 수 없다.
+func vaultTitleMarker(vaultName string) string {
+	return " - " + vaultName + " - Obsidian"
+}
+
+// matchesVaultTitle: 창 제목이 해당 볼트의 것인지 판정한다.
+// 옵시디언 창 제목은 노트 열림 여부에 따라 두 형태로 나뉜다.
+//
+//	노트 있음: "<노트제목> - <볼트명> - Obsidian <버전>"
+//	노트 없음: "<볼트명> - Obsidian <버전>"   ← 볼트를 갓 열었을 때
+//
+// 두 번째 형태는 핸들러가 꺼져 있던 볼트를 여는 가장 흔한 경로에서 나타나므로
+// 반드시 함께 처리해야 한다. (2026-08-27 실측: 첫 실행에서 폴백으로 떨어졌음)
+func matchesVaultTitle(title, vaultName string) bool {
+	if vaultName == "" {
+		return false
+	}
+	if strings.Contains(title, vaultTitleMarker(vaultName)) {
+		return true
+	}
+	return strings.HasPrefix(title, vaultName+" - Obsidian")
+}
+
+// enumObsidianWindows: 보이는 창 중 제목에 "Obsidian"이 든 것을 모두 모은다.
+// 첫 매치에서 멈추지 않아야 볼트별로 골라낼 수 있다.
+func enumObsidianWindows() []windowInfo {
+	var found []windowInfo
 
 	cb := syscall.NewCallback(func(hwnd, _ uintptr) uintptr {
 		vis, _, _ := procIsWindowVisible.Call(hwnd)
 		if vis == 0 {
 			return 1
 		}
-		buf := make([]uint16, 256)
-		procGetWindowTextW.Call(hwnd, uintptr(unsafe.Pointer(&buf[0])), 256)
+		buf := make([]uint16, 512)
+		procGetWindowTextW.Call(hwnd, uintptr(unsafe.Pointer(&buf[0])), 512)
 		title := syscall.UTF16ToString(buf)
 		if strings.Contains(title, "Obsidian") {
-			found = hwnd
-			return 0 // 열거 중단
+			found = append(found, windowInfo{hwnd: hwnd, title: title})
 		}
 		return 1
 	})
@@ -632,23 +719,55 @@ func findObsidianHwnd() uintptr {
 	return found
 }
 
-func activateObsidian() {
+type windowInfo struct {
+	hwnd  uintptr
+	title string
+}
+
+// pickObsidianWindow: 2단계로 창을 고른다.
+//  1. exact    — 제목에 " - <볼트명> - Obsidian"이 든 창 (해당 볼트의 창)
+//  2. fallback — 그게 없으면 "Obsidian"이 든 아무 창 (하위 호환)
+//
+// 창 제목 형식은 옵시디언 버전·설정에 따라 달라질 수 있으므로 폴백을 남긴다.
+// 폴백으로 떨어져도 수정 전과 같은 동작일 뿐 더 나빠지지 않는다.
+func pickObsidianWindow(windows []windowInfo, vaultName string) (windowInfo, string) {
+	for _, w := range windows {
+		if matchesVaultTitle(w.title, vaultName) {
+			return w, "exact"
+		}
+	}
+	if len(windows) > 0 {
+		return windows[0], "fallback"
+	}
+	return windowInfo{}, "none"
+}
+
+func activateObsidian(vaultName string) {
 	time.Sleep(1 * time.Second)
 
 	for i := 0; i < 3; i++ {
-		hwnd := findObsidianHwnd()
-		if hwnd != 0 {
-			iconic, _, _ := procIsIconic.Call(hwnd)
+		win, match := pickObsidianWindow(enumObsidianWindows(), vaultName)
+		if win.hwnd != 0 {
+			iconic, _, _ := procIsIconic.Call(win.hwnd)
+			restored := false
 			if iconic != 0 {
-				procShowWindow.Call(hwnd, swRestore)
+				procShowWindow.Call(win.hwnd, swRestore)
+				restored = true
 			}
-			procSetForeground.Call(hwnd)
-			writeLog(fmt.Sprintf("activate-window success attempt=%d", i+1))
+			ret, _, _ := procSetForeground.Call(win.hwnd)
+			foreground := "fail"
+			if ret != 0 {
+				foreground = "ok"
+			}
+			writeLog(fmt.Sprintf(
+				"activate-window match=%s title=%q hwnd=0x%X iconic=%t restored=%t foreground=%s attempt=%d",
+				match, win.title, win.hwnd, iconic != 0, restored, foreground, i+1,
+			))
 			return
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
-	writeLog("activate-window: Obsidian 창을 찾지 못함 (3회 시도)")
+	writeLog(fmt.Sprintf("activate-window match=none vault=%q — Obsidian 창을 찾지 못함 (3회 시도)", vaultName))
 }
 
 // ---------------------------------------------------------------------------
