@@ -1,12 +1,12 @@
-# obsidian-md-handler
+# obsidian-doubleclick
 
 ### Double-clicking a `.md` file doesn't open it in Obsidian. This fixes that.
 
 **Windows only** · one 3.4 MiB exe · no .NET, no Node.js, **no Obsidian plugin required**
 
-[![Release](https://img.shields.io/github/v/release/ahnbu/obsidian-md-handler?color=7c3aed)](https://github.com/ahnbu/obsidian-md-handler/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/ahnbu/obsidian-md-handler/total?color=7c3aed)](https://github.com/ahnbu/obsidian-md-handler/releases)
-[![License](https://img.shields.io/github/license/ahnbu/obsidian-md-handler?color=7c3aed)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ahnbu/obsidian-doubleclick?color=7c3aed)](https://github.com/ahnbu/obsidian-doubleclick/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/ahnbu/obsidian-doubleclick/total?color=7c3aed)](https://github.com/ahnbu/obsidian-doubleclick/releases)
+[![License](https://img.shields.io/github/license/ahnbu/obsidian-doubleclick?color=7c3aed)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078d4)
 
 [한국어 README](README.ko.md)
@@ -29,7 +29,7 @@ The only reliable workaround is a small program that sits between Explorer and O
 
 ```
 double-click note.md
-  └─ obsidian-handler.exe "note.md"
+  └─ obsidian-doubleclick.exe "note.md"
        ├─ file is inside a vault  → opens in Obsidian
        │    ├─ Advanced URI plugin installed → focuses the tab if already open,
        │    │                                   new tab otherwise (no duplicates)
@@ -41,18 +41,31 @@ double-click note.md
 - Brings **the right vault's window** to the front when you have several open
 - No console window flash (`-H=windowsgui` build)
 - Repairs the `.md` association if an Obsidian update clobbers it
-- Logs every run to `%TEMP%\obsidian-md-handler.log`
+- Logs every run to `%TEMP%\obsidian-doubleclick.log`
+
+## Why isn't this a plugin?
+
+Because a plugin cannot reach this. Windows file association lives in the registry, outside Obsidian — by the time any plugin code runs, Obsidian has already been launched without your file. That is why [six years of this thread](https://forum.obsidian.md/t/have-obsidian-be-the-handler-of-md-files-add-ability-to-use-obsidian-as-a-markdown-editor-on-files-outside-vault-file-association/314) has produced registry hacks and wrapper scripts but no plugin.
+
+Plugins like [Mononote](https://github.com/czottmann/obsidian-mononote) solve a different problem — keeping one tab per note **once you are already inside Obsidian**. This tool and those plugins don't overlap or conflict; if you want the tab behaviour everywhere, use both.
 
 ## How it compares
 
-| | This | [ObsidianShell](https://github.com/Chaoses-Ib/ObsidianShell) | BAT / AHK scripts |
+If you're deciding how to fix this on Windows, these are the realistic options.
+
+| | **obsidian-doubleclick** | [ObsidianShell](https://github.com/Chaoses-Ib/ObsidianShell) | DIY script (forum recipes) |
 |---|---|---|---|
-| Dependencies | none (single .exe) | .NET runtime | varies |
-| Obsidian plugin required | no (optional) | no | usually yes |
-| Focus existing tab instead of duplicating | yes (with plugin) | no | no |
-| Picks the correct window with multiple vaults | yes | no | no |
-| Files outside a vault | falls back to another editor | configurable | usually not handled |
-| Maintained | yes | last update 2023 | — |
+| What you must install first | ✅ nothing | ❌ .NET runtime | ⚠️ AutoHotkey for the AHK ones |
+| Obsidian plugin required | ✅ no | ✅ no | ❌ most recipes need Advanced URI |
+| Opens the right window when several vaults are open | ✅ yes | ❌ no | ❌ no |
+| Focuses an already-open note instead of duplicating it | ⚠️ needs Advanced URI | ❌ no | ⚠️ only if the recipe uses Advanced URI |
+| Files outside any vault | ✅ auto-detected fallback editor | ⚠️ configurable | ⚠️ some recipes branch on vault path |
+| Small enough to read end to end | ⚠️ ~900 lines of Go | ❌ a full C# application | ✅ usually under 30 lines |
+| Still maintained | ✅ yes | ❌ last update July 2024 | ⚠️ yours to maintain |
+
+> Rows are ordered by what actually decides whether you install: what you have to install first, then whether it does the right thing, then conveniences, then how much you have to trust.
+
+A DIY script is a genuinely good answer if you can write one — it's short, it's yours, and nobody can abandon it on you. This exists for the case where you'd rather not.
 
 ---
 
@@ -76,7 +89,7 @@ Settings → Apps → Default apps → search `.md` → choose **Obsidian**
 
 **2. Download**
 
-Grab `obsidian-handler.exe` and `install.ps1` from [Releases](../../releases/latest) and put them **in the same folder**.
+Grab `obsidian-doubleclick.exe` and `install.ps1` from [Releases](../../releases/latest) and put them **in the same folder**.
 
 **3. Run the installer**
 
@@ -87,8 +100,8 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 You should see:
 
 ```
-✅ obsidian-md-handler installed
-  Command : "C:\...\obsidian-handler.exe" "%1"
+✅ obsidian-doubleclick installed
+  Command : "C:\...\obsidian-doubleclick.exe" "%1"
 ✅ .md default app: Applications\Obsidian.exe — ready
 ```
 
@@ -102,7 +115,7 @@ Double-click any `.md` file inside a vault. It should open in Obsidian.
 
 ## Configuration (optional)
 
-Create `obsidian-handler.config.json` next to the executable:
+Create `obsidian-doubleclick.config.json` next to the executable:
 
 ```json
 {
@@ -134,17 +147,17 @@ If the file cannot be read for any reason, it falls back to the official URI, wh
 
 ## Troubleshooting
 
-**Nothing happens** → check `%TEMP%\obsidian-md-handler.log`. Every run is logged with the URI it built and which window it activated.
+**Nothing happens** → check `%TEMP%\obsidian-doubleclick.log`. Every run is logged with the URI it built and which window it activated.
 
-**The file icon looks wrong** → double-click any `.md` inside a vault once, or run `obsidian-handler.exe --repair`. If that does not help, re-run `install.ps1`.
+**The file icon looks wrong** → double-click any `.md` inside a vault once, or run `obsidian-doubleclick.exe --repair`. If that does not help, re-run `install.ps1`.
 
 **Files outside my vault do not open** → set `fallbackCommand` explicitly in the config.
 
 **I want to inspect the current state**
 
 ```powershell
-.\obsidian-handler.exe --doctor
-.\obsidian-handler.exe --repair
+.\obsidian-doubleclick.exe --doctor
+.\obsidian-doubleclick.exe --repair
 ```
 
 `--repair` never changes which app owns `.md`. It only restores the handler command, the Obsidian icon, and the friendly app name.
@@ -158,7 +171,7 @@ Nothing this handler does can speed that up. [Lazy Plugin Loader](https://github
 **I want to see what URI it would build, without opening anything**
 
 ```powershell
-.\obsidian-handler-debug.exe --debug "C:\path\to\note.md"
+.\obsidian-doubleclick-debug.exe --debug "C:\path\to\note.md"
 ```
 
 ---
@@ -166,14 +179,14 @@ Nothing this handler does can speed that up. [Lazy Plugin Loader](https://github
 ## Build from source
 
 ```bash
-git clone https://github.com/ahnbu/obsidian-md-handler
-cd obsidian-md-handler
+git clone https://github.com/ahnbu/obsidian-doubleclick
+cd obsidian-doubleclick
 
 # release build (no console window)
-go build -ldflags "-H=windowsgui" -o obsidian-handler.exe .
+go build -ldflags "-H=windowsgui" -o obsidian-doubleclick.exe .
 
 # debug build (console window, --debug works)
-go build -o obsidian-handler-debug.exe .
+go build -o obsidian-doubleclick-debug.exe .
 
 go test ./...
 ```

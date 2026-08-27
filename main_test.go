@@ -279,11 +279,11 @@ func TestParseArgsRecognizesDoctorAndRepair(t *testing.T) {
 
 func TestExpectedRegistryState(t *testing.T) {
 	got := expectedRegistryState(
-		`D:\tools\obsidian-handler.exe`,
+		`D:\tools\obsidian-doubleclick.exe`,
 		`C:\Program Files\Obsidian\Obsidian.exe`,
 	)
 
-	if got.Command != `"D:\tools\obsidian-handler.exe" "%1"` {
+	if got.Command != `"D:\tools\obsidian-doubleclick.exe" "%1"` {
 		t.Fatalf("unexpected command: %q", got.Command)
 	}
 	if got.DefaultIcon != `"C:\Program Files\Obsidian\Obsidian.exe",0` {
@@ -296,7 +296,7 @@ func TestExpectedRegistryState(t *testing.T) {
 
 func TestBuildSelfHealChecksSkipsIconWhenObsidianPathUnknown(t *testing.T) {
 	current := registryState{}
-	expected := expectedRegistryState(`D:\tools\obsidian-handler.exe`, "")
+	expected := expectedRegistryState(`D:\tools\obsidian-doubleclick.exe`, "")
 
 	checks := buildSelfHealChecks(current, expected)
 
@@ -310,12 +310,12 @@ func TestBuildSelfHealChecksSkipsIconWhenObsidianPathUnknown(t *testing.T) {
 func TestExpectedHandlerExePathPrefersProductionSibling(t *testing.T) {
 	t.Setenv("TEMP", t.TempDir())
 	dir := t.TempDir()
-	productionPath := dir + `\obsidian-handler.exe`
+	productionPath := dir + `\obsidian-doubleclick.exe`
 	if err := os.WriteFile(productionPath, []byte("x"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	got := expectedHandlerExePath(dir + `\obsidian-handler-debug.exe`)
+	got := expectedHandlerExePath(dir + `\obsidian-doubleclick-debug.exe`)
 
 	if got != productionPath {
 		t.Fatalf("expected %q, got %q", productionPath, got)

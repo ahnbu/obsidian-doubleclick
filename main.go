@@ -1,17 +1,17 @@
-// obsidian-md-handler: Windows .md 파일 더블클릭 핸들러
+// obsidian-doubleclick: Windows .md 파일 더블클릭 핸들러
 // 옵시디언 볼트 내 파일은 Advanced URI로 옵시디언에서 열고,
 // 볼트 밖 파일은 fallback 앱(Typora → VS Code → 메모장)으로 열림.
 //
 // 빌드 (배포용, 콘솔 창 없음):
-//   go build -ldflags "-H=windowsgui" -o obsidian-handler.exe .
+//   go build -ldflags "-H=windowsgui" -o obsidian-doubleclick.exe .
 //
 // 빌드 (디버그용, 콘솔 창 있음):
-//   go build -o obsidian-handler-debug.exe .
+//   go build -o obsidian-doubleclick-debug.exe .
 //
 // 사용:
-//   obsidian-handler.exe [--debug] <파일경로>
-//   obsidian-handler.exe --doctor
-//   obsidian-handler.exe --repair
+//   obsidian-doubleclick.exe [--debug] <파일경로>
+//   obsidian-doubleclick.exe --doctor
+//   obsidian-doubleclick.exe --repair
 
 package main
 
@@ -62,7 +62,7 @@ const (
 	regDefaultValue = ""
 	regFriendlyName = "FriendlyAppName"
 	expectedProgID  = `Applications\Obsidian.exe`
-	productionExe   = "obsidian-handler.exe"
+	productionExe   = "obsidian-doubleclick.exe"
 	friendlyAppName = "Obsidian"
 )
 
@@ -79,7 +79,7 @@ type vaultEntry struct {
 	Path string `json:"path"`
 }
 
-// handlerConfig: 핸들러 설치 폴더의 obsidian-handler.config.json (선택)
+// handlerConfig: 핸들러 설치 폴더의 obsidian-doubleclick.config.json (선택)
 type handlerConfig struct {
 	FallbackCommand string `json:"fallbackCommand,omitempty"`
 	ObsidianExePath string `json:"obsidianExePath,omitempty"`
@@ -113,7 +113,7 @@ func main() {
 	}
 
 	if opts.filePath == "" {
-		writeLog("ERROR: 파일 경로 없음. 사용법: obsidian-handler.exe [--debug] <파일경로>")
+		writeLog("ERROR: 파일 경로 없음. 사용법: obsidian-doubleclick.exe [--debug] <파일경로>")
 		os.Exit(2)
 	}
 	filePath := filepath.Clean(opts.filePath)
@@ -305,7 +305,7 @@ func loadHandlerConfig() handlerConfig {
 	if err != nil {
 		return handlerConfig{}
 	}
-	cfgPath := filepath.Join(filepath.Dir(exe), "obsidian-handler.config.json")
+	cfgPath := filepath.Join(filepath.Dir(exe), "obsidian-doubleclick.config.json")
 	data, err := os.ReadFile(cfgPath)
 	if err != nil {
 		return handlerConfig{}
@@ -862,7 +862,7 @@ func writeLog(msg string) {
 	if tempDir == "" {
 		return
 	}
-	logPath := filepath.Join(tempDir, "obsidian-md-handler.log")
+	logPath := filepath.Join(tempDir, "obsidian-doubleclick.log")
 	f, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return
