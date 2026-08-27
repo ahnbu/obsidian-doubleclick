@@ -1,155 +1,185 @@
 # obsidian-md-handler
 
-**.md 파일 더블클릭 → 옵시디언에서 바로 열기** (Windows)
+**Double-click a `.md` file in Explorer → it opens in Obsidian.** (Windows)
 
-Node.js 불필요 · exe 3.3MB · 설치 스크립트 한 번 실행으로 완성
+A single 3.4 MiB executable. No .NET, no Node.js, and **no Obsidian plugin required**.
 
----
-
-## 이런 문제 없었어?
-
-탐색기에서 `.md` 파일 더블클릭 → 옵시디언이 열리긴 하는데 **클릭한 파일은 안 열리고 마지막 워크스페이스만 나옴.**
-
-옵시디언은 Electron 앱이라 `Obsidian.exe 파일경로` 방식으로는 특정 파일을 열 수 없어. 이걸 해결하려면 `obsidian://` URI 프로토콜을 경유하는 래퍼가 필요한데, 기존 방법들은 Node.js 설치 + VBS 파일 여러 개 + 스크립트 구성이 복잡했음.
-
-이 도구는 **Go로 만든 단일 exe 하나**로 이 모든 걸 대체함.
+[한국어 README](README.ko.md)
 
 ---
 
-## 동작 방식
+## The problem
+
+Set Obsidian as the default app for `.md`, double-click a note, and Obsidian opens — but **not the file you clicked.** You get your last workspace instead.
+
+This is not a bug in your setup. Obsidian is an Electron app that ignores the file path Windows hands it (`Obsidian.exe "%1"`), and it has been the [most-requested unfixed issue since May 2020](https://forum.obsidian.md/t/have-obsidian-be-the-handler-of-md-files-add-ability-to-use-obsidian-as-a-markdown-editor-on-files-outside-vault-file-association/314) — 100+ likes, 170+ replies, still open.
+
+The only reliable workaround is a small program that sits between Explorer and Obsidian and translates the file path into an `obsidian://` URI. That is what this is.
+
+---
+
+## What it does
 
 ```
-.md 더블클릭
-  └─ obsidian-handler.exe "%1"
-       ├─ vault 내부 파일 → obsidian://advanced-uri?...&openmode=true
-       │    ├─ 이미 열린 파일 → 해당 탭으로 포커스 (중복 탭 방지)
-       │    └─ 새 파일 → 새 탭으로 열기
-       └─ vault 외부 파일 → Typora → VS Code → 메모장 순 자동 감지
+double-click note.md
+  └─ obsidian-handler.exe "note.md"
+       ├─ file is inside a vault  → opens in Obsidian
+       │    ├─ Advanced URI plugin installed → focuses the tab if already open,
+       │    │                                   new tab otherwise (no duplicates)
+       │    └─ no plugin          → opens in a new tab via the official URI
+       └─ file is outside a vault → Typora → VS Code → Notepad (auto-detected)
 ```
 
-- vault 목록을 `%APPDATA%\Obsidian\obsidian.json`에서 자동 읽음 (하드코딩 불필요)
-- Obsidian 업데이트 후 `.md` 연결 command, 아이콘, 앱 이름이 틀어지면 더블클릭 시 안전 항목만 자동 복구
-- 콘솔 창 깜빡임 없음 (`-H=windowsgui` 빌드)
-- 실행 로그: `%TEMP%\obsidian-md-handler.log`
+- Reads your vault list from `%APPDATA%\Obsidian\obsidian.json` — nothing to hardcode
+- Brings **the right vault's window** to the front when you have several open
+- No console window flash (`-H=windowsgui` build)
+- Repairs the `.md` association if an Obsidian update clobbers it
+- Logs every run to `%TEMP%\obsidian-md-handler.log`
+
+## How it compares
+
+| | This | [ObsidianShell](https://github.com/Chaoses-Ib/ObsidianShell) | BAT / AHK scripts |
+|---|---|---|---|
+| Dependencies | none (single .exe) | .NET runtime | varies |
+| Obsidian plugin required | no (optional) | no | usually yes |
+| Focus existing tab instead of duplicating | yes (with plugin) | no | no |
+| Picks the correct window with multiple vaults | yes | no | no |
+| Files outside a vault | falls back to another editor | configurable | usually not handled |
+| Maintained | yes | last update 2023 | — |
 
 ---
 
-## 설치
-
-### 필요한 것
+## Requirements
 
 - Windows 10 / 11
-- 옵시디언
-- [Advanced URI 플러그인](https://obsidian.md/plugins?id=obsidian-advanced-uri) (이미 열린 탭 포커스 기능에 필요)
+- Obsidian
+- *(Optional)* [Advanced URI plugin](https://obsidian.md/plugins?id=obsidian-advanced-uri) — only needed if you want an already-open note to be focused instead of opened again
 
-### 설치 순서
+> **The executable is not code-signed.** Windows SmartScreen will warn you the first time. If you would rather not trust a stranger's binary, [build it yourself](#build-from-source) — it is ~840 lines of dependency-free Go and takes one command.
 
-> **순서 중요**: Windows 기본 앱 설정을 먼저 하고 설치 스크립트를 실행해야 함.
-> 반대로 하면 Windows가 레지스트리 값을 덮어씀.
+---
 
-**① .md 기본 앱을 Obsidian으로 설정**
+## Install
 
-Windows 설정 → 앱 → 기본 앱 → `.md` 검색 → **Obsidian** 선택
+> **Order matters.** Set the Windows default app *first*, then run the installer. Doing it the other way round lets Windows overwrite the registry entry.
 
-**② Releases에서 파일 다운로드**
+**1. Make Obsidian the default app for `.md`**
 
-[GitHub Releases](../../releases/latest) 에서 `obsidian-handler.exe`와 `install.ps1`을 **같은 폴더**에 받기
+Settings → Apps → Default apps → search `.md` → choose **Obsidian**
 
-**③ 설치 스크립트 실행**
+**2. Download**
+
+Grab `obsidian-handler.exe` and `install.ps1` from [Releases](../../releases/latest) and put them **in the same folder**.
+
+**3. Run the installer**
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-이렇게 뜨면 완료:
+You should see:
 
 ```
-✅ obsidian-md-handler (Go) 설치 완료
+✅ obsidian-md-handler installed
   Command : "C:\...\obsidian-handler.exe" "%1"
-✅ .md 기본 앱: Applications\Obsidian.exe — 준비 완료
+✅ .md default app: Applications\Obsidian.exe — ready
 ```
 
-**④ 확인**
+The installer writes to `HKCU` only — **no administrator rights needed** — and backs up your previous association to `.backup/`.
 
-탐색기에서 vault 안의 `.md` 파일 더블클릭 → 옵시디언 새 탭으로 열리면 완료.
+**4. Check**
+
+Double-click any `.md` file inside a vault. It should open in Obsidian.
 
 ---
 
-## 설정 (선택)
+## Configuration (optional)
 
-`obsidian-handler.exe`와 같은 폴더에 `obsidian-handler.config.json` 생성:
+Create `obsidian-handler.config.json` next to the executable:
 
 ```json
 {
-  "fallbackCommand": "C:\\Program Files\\Typora\\Typora.exe"
+  "uriMode": "auto",
+  "fallbackCommand": "C:\\Program Files\\Typora\\Typora.exe",
+  "obsidianExePath": "C:\\Program Files\\Obsidian\\Obsidian.exe"
 }
 ```
 
-| 항목 | 설명 |
-|------|------|
-| `fallbackCommand` | vault 외부 파일을 열 앱 경로. 미설정 시 Typora → VS Code → 메모장 순으로 자동 감지 |
+| Key | Default | Meaning |
+|---|---|---|
+| `uriMode` | `auto` | `auto` detects whether Advanced URI is enabled in that vault. Force it with `adv-uri` or `official` |
+| `fallbackCommand` | auto-detect | Which editor opens files that live outside any vault. Falls back to Typora → VS Code → Notepad |
+| `obsidianExePath` | auto-detect | Only needed if Obsidian is installed somewhere unusual |
+
+### About `uriMode`
+
+`auto` reads `<vault>/.obsidian/community-plugins.json` to see whether Advanced URI is **enabled** (not merely installed) and picks accordingly:
+
+| | `adv-uri` (plugin enabled) | `official` (no plugin) |
+|---|---|---|
+| Opens the file | yes | yes |
+| Opens in a new tab | yes | yes |
+| Focuses the tab if the note is already open | yes | no — you get a second tab |
+
+If the file cannot be read for any reason, it falls back to the official URI, which always works.
 
 ---
 
-## 문제 해결
+## Troubleshooting
 
-**아무 반응이 없어요** → 로그 파일 확인: `%TEMP%\obsidian-md-handler.log`
+**Nothing happens** → check `%TEMP%\obsidian-md-handler.log`. Every run is logged with the URI it built and which window it activated.
 
-**"advanced-uri" 오류가 떠요** → 옵시디언 설정 → 커뮤니티 플러그인 → Advanced URI 설치·활성화 확인
+**The file icon looks wrong** → double-click any `.md` inside a vault once, or run `obsidian-handler.exe --repair`. If that does not help, re-run `install.ps1`.
 
-**파일 아이콘이 이상해졌어요** → vault 안의 `.md`를 한 번 더블클릭하거나 `.\obsidian-handler.exe --repair` 실행. 그래도 안 되면 `install.ps1` 재실행
+**Files outside my vault do not open** → set `fallbackCommand` explicitly in the config.
 
-**vault 외부 파일이 안 열려요** → `obsidian-handler.config.json`에 `fallbackCommand` 직접 지정
-
-**연결 상태를 직접 점검하고 싶어요**:
+**I want to inspect the current state**
 
 ```powershell
 .\obsidian-handler.exe --doctor
 .\obsidian-handler.exe --repair
 ```
 
-`--repair`는 `.md` 기본 앱 자체를 강제로 바꾸지 않고, handler command, Obsidian 아이콘, 앱 이름만 복구함.
+`--repair` never changes which app owns `.md`. It only restores the handler command, the Obsidian icon, and the friendly app name.
+
+**I want to see what URI it would build, without opening anything**
+
+```powershell
+.\obsidian-handler-debug.exe --debug "C:\path\to\note.md"
+```
 
 ---
 
-## 직접 빌드
+## Build from source
 
 ```bash
-git clone https://github.com/your-username/obsidian-md-handler
+git clone https://github.com/ahnbu/obsidian-md-handler
 cd obsidian-md-handler
 
-# 배포용 (콘솔 창 없음)
+# release build (no console window)
 go build -ldflags "-H=windowsgui" -o obsidian-handler.exe .
 
-# 디버그용 (콘솔 창 있음, --debug 플래그 사용 가능)
+# debug build (console window, --debug works)
 go build -o obsidian-handler-debug.exe .
+
+go test ./...
 ```
 
-Go 1.20+ 필요. 외부 의존성 없음.
-
-```bash
-# 볼트 감지 확인
-obsidian-handler-debug.exe --debug "C:\path\to\file.md"
-
-# 연결 상태 확인
-obsidian-handler-debug.exe --doctor
-```
+Go 1.20+. No external dependencies — standard library and `syscall` only.
 
 ---
 
-## 제거
+## Uninstall
 
-`install.ps1`이 `.backup/` 폴더에 이전 설정을 백업해둬. 복구하려면:
+Change the default app for `.md` in Windows Settings, or restore the backed-up association:
 
 ```powershell
 $backup = Get-ChildItem ".backup\backup_*.json" | Sort-Object Name | Select-Object -Last 1 | Get-Content | ConvertFrom-Json
 Set-ItemProperty "HKCU:\Software\Classes\Applications\Obsidian.exe\shell\open\command" -Name "(default)" -Value $backup.previousCommand
 ```
 
-또는 Windows 설정에서 `.md` 기본 앱을 다른 앱으로 바꾸면 됨.
-
 ---
 
-## 라이선스
+## License
 
-MIT
+MIT — see [LICENSE](LICENSE).

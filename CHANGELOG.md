@@ -4,6 +4,7 @@
 
 | 일시 | 유형 | 범위 | 변경내용 (목적 포함) |
 |---|---|---|---|
+| 2026-08-27 14:55 | docs | readme | 공개 배포 준비 — 영어 README를 정본으로 신설(한국어는 README.ko.md로 분리), MIT LICENSE 파일 추가, your-username 플레이스홀더를 ahnbu로 수정, uriMode 설정과 다중 vault 창 선택 동작 문서화, 미서명 exe 안내 추가 |
 | 2026-08-27 13:57 | fix | handler | 다중 vault 포커스 버그 수정 + Advanced URI 플러그인 의존 제거 — 창 제목의 vault명으로 대상 창을 특정(2단계 폴백), community-plugins.json 감지로 플러그인 없으면 공식 URI(paneType=tab) 자동 전환, uriMode config 옵션 추가, 판정용 로깅 강화. 공개 배포 선행 조건 |
 | 2026-07-08 11:27 | chore | gitignore | gitignore에 .codegraph/를 추가해 CodeGraph 로컬 캐시가 작업트리에 노출되지 않도록 보완 |
 | 2026-05-09 | feat | self-heal | 더블클릭 실행 시 handler command, DefaultIcon, FriendlyAppName drift를 안전하게 자동 복구하고 `--doctor`/`--repair` 진단 명령 추가 |
