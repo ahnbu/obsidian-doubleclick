@@ -23,7 +23,7 @@
 
 설정이 잘못된 게 아니다. 옵시디언은 Electron 앱이라 윈도우가 넘겨주는 파일 경로(`Obsidian.exe "%1"`)를 무시한다.
 
-이건 [2020년 5월부터 열려 있는 최다 요청 이슈](https://forum.obsidian.md/t/have-obsidian-be-the-handler-of-md-files-add-ability-to-use-obsidian-as-a-markdown-editor-on-files-outside-vault-file-association/314)다 — 좋아요 100개 이상, 댓글 170개 이상, 지금도 미해결.
+이건 [2020년 5월부터 열려 있는 최다 요청 이슈](https://forum.obsidian.md/t/have-obsidian-be-the-handler-of-md-files-add-ability-to-use-obsidian-as-a-markdown-editor-on-files-outside-vault-file-association/314)다 — 좋아요 111개, 댓글 167개, 지금도 미해결.
 
 그래서 해결은 옵시디언 바깥에 있어야 한다. 탐색기와 옵시디언 사이에 끼어서 파일 경로를 `obsidian://` URI로 번역해주는 작은 프로그램 — 이게 그거다.
 

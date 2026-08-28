@@ -21,7 +21,7 @@
 
 Set Obsidian as the default app for `.md`, double-click a note, and Obsidian opens — but **not the file you clicked.** You get your last workspace instead.
 
-This is not a bug in your setup. Obsidian is an Electron app that ignores the file path Windows hands it (`Obsidian.exe "%1"`), and it has been the [most-requested unfixed issue since May 2020](https://forum.obsidian.md/t/have-obsidian-be-the-handler-of-md-files-add-ability-to-use-obsidian-as-a-markdown-editor-on-files-outside-vault-file-association/314) — 100+ likes, 170+ replies, still open.
+This is not a bug in your setup. Obsidian is an Electron app that ignores the file path Windows hands it (`Obsidian.exe "%1"`), and it has been the [most-requested unfixed issue since May 2020](https://forum.obsidian.md/t/have-obsidian-be-the-handler-of-md-files-add-ability-to-use-obsidian-as-a-markdown-editor-on-files-outside-vault-file-association/314) — 111 likes, 167 replies, still open.
 
 The only reliable workaround is a small program that sits between Explorer and Obsidian and translates the file path into an `obsidian://` URI. That is what this is.
 
