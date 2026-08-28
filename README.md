@@ -11,7 +11,9 @@
 
 [한국어 README](README.ko.md)
 
-<!-- DEMO GIF: 여기에 `![demo](docs/demo.gif)` 한 줄. 탐색기 더블클릭 → 옵시디언 새 탭 5초 녹화. -->
+![Double-clicking a note in Explorer opens that note in Obsidian; clicking it again focuses the existing tab instead of duplicating it](docs/demo.gif)
+
+<sub>Obsidian already running. Cold start takes longer — see [Troubleshooting](#troubleshooting).</sub>
 
 ---
 
