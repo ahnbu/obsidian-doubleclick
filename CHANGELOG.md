@@ -4,6 +4,7 @@
 
 | 일시 | 유형 | 범위 | 변경내용 (목적 포함) |
 |---|---|---|---|
+| 2026-08-31 16:30 | chore | docs | (실행완료) → _실행완료 개명과 그에 따른 위키링크·마크다운 링크 갱신 |
 | 2026-08-28 21:25 | docs | readme | FR #314 인용 수치를 실측값(좋아요 111·댓글 167)으로 정정 |
 | 2026-08-28 19:35 | docs | readme | README 상단에 동작 시연 GIF 추가 및 데모용 샘플 노트 3개 포함 |
 | 2026-08-27 16:03 | refactor | naming | 프로젝트 이름을 obsidian-md-handler에서 obsidian-doubleclick으로 변경 — 레포·exe·모듈·로그·config 전부. handler는 개발자 용어라 일반 사용자에게 의미가 없고, 사람들이 실제로 검색하는 말은 obsidian double click이다(GitHub 동명 프로젝트 0건). 다운로드 0건 시점이라 비용 최소. 함께 발견한 install.ps1 인코딩 버그 수정 — UTF-8 BOM 없는 한글 스크립트를 Windows PowerShell 5.1이 ANSI로 읽어 파싱 실패했다. 전문 영어화 + BOM 추가. 낡은 한국어 쓰레드 초안(not-yet) 제거 |
