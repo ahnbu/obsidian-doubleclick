@@ -11,7 +11,7 @@
 
 [한국어 README](README.ko.md)
 
-![Double-clicking a note in Explorer opens that note in Obsidian; clicking it again focuses the existing tab instead of duplicating it](docs/demo.gif)
+![Double-clicking a note in Explorer opens that note in Obsidian; clicking it again focuses the existing tab instead of duplicating it](_docs/demo.gif)
 
 <sub>Obsidian already running. Cold start takes longer — see [Troubleshooting](#troubleshooting).</sub>
 
