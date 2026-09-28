@@ -4,6 +4,7 @@
 
 | 일시 | 유형 | 범위 | 변경내용 (목적 포함) |
 |---|---|---|---|
+| 2026-09-28 13:02 | feat | macos | macOS 앱 추가 — Swift AppKit 앱 ObsidianDoubleclick.app이 Finder의 odoc 이벤트로 파일을 받아 Windows와 같은 obsidian:// URI(adv-uri/official 자동 판정)로 연다. 볼트 밖 파일은 Typora → VS Code → TextEdit 폴백, NFC/NFD·대소문자·심볼릭 링크 처리, --debug·--set-default·--version, macos/build.sh. 옵시디언이 맥에서도 넘겨받은 파일을 무시함을 실측. 자체 테스트 39건·맥 실측 E1~E9 통과(단일 볼트, arm64 전용). Windows 코드 무변경. 릴리스(v0.2.0)는 실사용 테스트 후 진행 |
 | 2026-09-03 20:06 | refactor | docs | docs/ 폴더를 _docs/로 이동 — 레포 간 문서 폴더명 통일 |
 | 2026-08-31 16:30 | chore | docs | (실행완료) → _실행완료 개명과 그에 따른 위키링크·마크다운 링크 갱신 |
 | 2026-08-28 21:25 | docs | readme | FR #314 인용 수치를 실측값(좋아요 111·댓글 167)으로 정정 |

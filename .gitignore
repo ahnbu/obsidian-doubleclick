@@ -18,3 +18,7 @@ obsidian-handler.config.json
 temp/
 .temp/
 .codegraph/
+
+# macOS 빌드 결과물
+macos/build/
+*.zip
