@@ -2,6 +2,9 @@
 
 ### Double-clicking a `.md` file doesn't open it in Obsidian. This fixes that.
 
+> [!IMPORTANT]
+> **Obsidian is adding this officially.** Desktop 1.14.2 (early access, 2026-09-15) lets you set Obsidian as the default app for Markdown files and open files outside your vault ([changelog](https://obsidian.md/changelog/2026-09-15-desktop-v1.14.2/)). Once 1.14 reaches the public release, you probably don't need this tool. Until then it still works — **development is on hold** and no new releases are planned.
+
 **Windows · macOS** · one 3.4 MiB exe / one 328 KB app · no .NET, no Node.js, **no Obsidian plugin required**
 
 [![Release](https://img.shields.io/github/v/release/ahnbu/obsidian-doubleclick?color=7c3aed)](https://github.com/ahnbu/obsidian-doubleclick/releases/latest)
@@ -124,15 +127,13 @@ Double-click any `.md` file inside a vault. It should open in Obsidian.
 
 ### macOS
 
-**1. Download** `obsidian-doubleclick-macos.zip` from [Releases](../../releases/latest), unzip it, and move `ObsidianDoubleclick.app` to `~/Applications` (or `/Applications`).
+**1. Build it.** There is no macOS download in Releases (development is on hold — see the note at the top). [Build from source](#build-from-source) — about 470 lines of Swift, one script — and move `macos/build/ObsidianDoubleclick.app` to `~/Applications` (or `/Applications`).
 
-**2. Let it run.** The app is ad-hoc signed, not notarized by Apple, so Gatekeeper blocks a downloaded copy (`spctl` reports `rejected`). Clear the download flag once:
+**2. Let it run.** The app is ad-hoc signed, not notarized by Apple. A copy you built yourself runs as is. If you received the app as a download, Gatekeeper blocks it (`spctl` reports `rejected`); clear the download flag once:
 
 ```bash
 xattr -dr com.apple.quarantine ~/Applications/ObsidianDoubleclick.app
 ```
-
-If you'd rather not trust a stranger's binary, [build it yourself](#build-from-source) — about 470 lines of Swift, one script.
 
 **3. Make it the default app for `.md`**
 

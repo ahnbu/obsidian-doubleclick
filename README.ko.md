@@ -2,6 +2,9 @@
 
 ### `.md` 더블클릭해도 옵시디언에서 그 파일이 안 열리는 문제, 이걸로 해결됨
 
+> [!IMPORTANT]
+> **옵시디언이 이 기능을 공식으로 넣고 있다.** 데스크톱 1.14.2(조기공개판, 2026-09-15)부터 옵시디언을 마크다운 파일의 기본 앱으로 지정할 수 있고 볼트 밖 파일도 열린다([변경 기록](https://obsidian.md/changelog/2026-09-15-desktop-v1.14.2/)). 1.14가 일반 공개되면 이 도구는 아마 필요 없다. 그 전까지는 그대로 동작한다 — **개발은 보류**했고 새 릴리스 계획은 없다.
+
 **Windows · macOS** · exe 하나 3.4MiB / 앱 하나 328KB · .NET·Node.js·플러그인 **전부 불필요**
 
 [![Release](https://img.shields.io/github/v/release/ahnbu/obsidian-doubleclick?color=7c3aed)](https://github.com/ahnbu/obsidian-doubleclick/releases/latest)
@@ -123,15 +126,13 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 
 ### 설치 순서 (macOS)
 
-**① 다운로드** — [Releases](../../releases/latest)에서 `obsidian-doubleclick-macos.zip`을 받아 풀고, `ObsidianDoubleclick.app`을 `~/Applications`(또는 `/Applications`)로 옮긴다.
+**① 빌드** — Releases에는 맥용 파일이 없다(개발 보류 — 맨 위 안내 참고). [직접 빌드](#직접-빌드)한다 — Swift 470줄 정도, 스크립트 하나. 만들어진 `macos/build/ObsidianDoubleclick.app`을 `~/Applications`(또는 `/Applications`)로 옮긴다.
 
-**② 실행 허용** — 애플 공증 없이 ad-hoc 서명만 한 앱이라, 인터넷에서 받은 사본은 Gatekeeper가 막는다(`spctl` 판정 `rejected`). 다운로드 표시를 한 번 지운다:
+**② 실행 허용** — 애플 공증 없이 ad-hoc 서명만 한 앱이다. 직접 빌드한 사본은 그대로 실행된다. 다른 경로로 내려받은 사본이면 Gatekeeper가 막으므로(`spctl` 판정 `rejected`) 다운로드 표시를 한 번 지운다:
 
 ```bash
 xattr -dr com.apple.quarantine ~/Applications/ObsidianDoubleclick.app
 ```
-
-남의 바이너리가 꺼려지면 [직접 빌드](#직접-빌드)하면 된다 — Swift 470줄 정도, 스크립트 하나.
 
 **③ `.md` 기본 앱으로 지정**
 
